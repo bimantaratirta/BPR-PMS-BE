@@ -41,7 +41,7 @@ jobs:
 
           script: |
             echo "🌐 Connecting to BPR server via PEM key..."
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/bpr/bpr-srv01.pem ${{ secrets.USERNAME_APP }}@${{ secrets.HOST_APP }} << 'EOSSH'
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/bpr-srv01.pem ${{ secrets.USERNAME_APP }}@${{ secrets.HOST_APP }} << 'EOSSH'
               
               echo "🔁 Pulling latest Docker image..."
               docker pull nevmock/bpr-api-dev-v2:latest
