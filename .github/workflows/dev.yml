@@ -1,4 +1,4 @@
-name: 🚀 CI/CD Development
+name: 🚀 CI/CD Development V2
 
 on:
   push:
@@ -31,46 +31,47 @@ jobs:
       - name: 📤 Push Docker Image
         run: docker push nevmock/bpr-api-dev-v2:latest
 
-      - name: 🚢 Login to VPS Nevmock
+      # Login ke VPS Nevmock
+      - name: 🚀 Deploy to BPR Server (via Nevmock)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-      
-      - name: 🚢 Deploy to VPS APP BPR
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_APP }}
-          username: ${{ secrets.USERNAME_APP }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_APP }}
+
           script: |
-            echo "🔁 Pulling latest Docker image..."
-            docker pull nevmock/bpr-api-dev-v2:latest
+            echo "🌐 Connecting to BPR server via PEM key..."
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/bpr/bpr-srv01.pem ${{ secrets.USERNAME_APP }}@${{ secrets.HOST_APP }} << 'EOSSH'
+              
+              echo "🔁 Pulling latest Docker image..."
+              docker pull nevmock/bpr-api-dev-v2:latest
 
-            echo "🛑 Stopping and removing old container (if exists)..."
-            docker stop bpr-api-dev-v2 || true
-            docker rm bpr-api-dev-v2 || true
+              echo "🛑 Stopping and removing old container (if exists)..."
+              docker stop bpr-api-dev-v2 || true
+              docker rm bpr-api-dev-v2 || true
 
-            echo "🚀 Running new container..."
-            docker run -d \
-              --name bpr-api-dev-v2 \
-              --restart unless-stopped \
-              -e NODE_ENV="development" \
-              -e PORT="3000" \
-              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-              -e IS3_END_POINT="${{ secrets.IS3_END_POINT }}" \
-              -e IS3_ACCESS_KEY_ID="${{ secrets.IS3_ACCESS_KEY_ID }}" \
-              -e IS3_SECRET_ACCESS_KEY_ID="${{ secrets.IS3_SECRET_ACCESS_KEY_ID }}" \
-              -e IS3_BUCKET_NAME="${{ secrets.IS3_BUCKET_NAME }}" \
-              -e IS3_REGION="${{ secrets.IS3_REGION }}" \
-              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              -p "${{ secrets.PORT }}":3000 \
-              -v bpr-api-dev-v2:/app/public \
-              nevmock/bpr-api-dev-v2:latest
-            
-            echo "🔄 Running Prisma migrations..."
-            docker exec bpr-api-dev-v2 npx prisma migrate deploy --preview-feature
-            
-            echo "🧹 Cleaning up unused Docker resources..."
-            docker system prune -f
+              echo "🚀 Running new container..."
+              docker run -d \
+                --name bpr-api-dev-v2 \
+                --restart unless-stopped \
+                -e NODE_ENV="development" \
+                -e PORT="3000" \
+                -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+                -e IS3_END_POINT="${{ secrets.IS3_END_POINT }}" \
+                -e IS3_ACCESS_KEY_ID="${{ secrets.IS3_ACCESS_KEY_ID }}" \
+                -e IS3_SECRET_ACCESS_KEY_ID="${{ secrets.IS3_SECRET_ACCESS_KEY_ID }}" \
+                -e IS3_BUCKET_NAME="${{ secrets.IS3_BUCKET_NAME }}" \
+                -e IS3_REGION="${{ secrets.IS3_REGION }}" \
+                -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+                -p "${{ secrets.PORT }}":3000 \
+                -v bpr-api-dev-v2:/app/public \
+                nevmock/bpr-api-dev-v2:latest
+
+              echo "🔄 Running Prisma migrations..."
+              docker exec bpr-api-dev-v2 npx prisma migrate deploy --preview-feature
+              
+              echo "🧹 Cleaning up unused Docker resources..."
+              docker system prune -f
+              
+              echo "✅ Deploy complete!"
+            EOSSH
