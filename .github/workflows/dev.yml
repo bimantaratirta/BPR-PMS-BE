@@ -20,11 +20,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       # Install dependencies (faster and reproducible)
       - name: 📥 Install Dependencies
-        run: npm ci
+        run: npm install
 
       # 🔧 FIX TERPENTING: Generate Prisma Client untuk Linux
       - name: 🔮 Generate Prisma Client for Linux
