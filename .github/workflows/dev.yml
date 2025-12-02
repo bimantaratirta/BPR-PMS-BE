@@ -26,23 +26,36 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: 🛠 Build Docker Image
+        # Menambahkan --no-cache opsional jika ingin build benar-benar bersih, tapi standar ok
         run: docker build -t nevmock/bpr-api-dev-v2:latest .
 
       - name: 📤 Push Docker Image
         run: docker push nevmock/bpr-api-dev-v2:latest
 
-      # Login ke VPS Nevmock
+      # Login ke VPS Nevmock -> lanjut SSH ke Server App
       - name: 🚀 Deploy to BPR Server (via Nevmock)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          # -------------------------------------------------------
+          # PERBAIKAN PENTING: MENAMBAH TIMEOUT
+          # Default hanya 10m, kita naikkan jadi 30m untuk download file besar
+          timeout: 30m
+          command_timeout: 30m
+          # -------------------------------------------------------
 
           script: |
             echo "🌐 Connecting to BPR server via PEM key..."
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/bpr-srv01.pem ${{ secrets.USERNAME_APP }}@${{ secrets.HOST_APP }} << 'EOSSH'
+            # Menambahkan ServerAliveInterval agar koneksi SSH dalam tidak putus saat idle menunggu docker
+            ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -i ~/.ssh/bpr-srv01.pem ${{ secrets.USERNAME_APP }}@${{ secrets.HOST_APP }} << 'EOSSH'
               
+              # 1. Bersihkan space DULU sebelum download agar tidak penuh
+              echo "🧹 Pre-cleaning: Menghapus cache docker yang tidak terpakai..."
+              docker system prune -f
+
               echo "🔁 Pulling latest Docker image..."
               docker pull nevmock/bpr-api-dev-v2:latest
 
@@ -68,10 +81,12 @@ jobs:
                 nevmock/bpr-api-dev-v2:latest
 
               echo "🔄 Running Prisma migrations..."
-              docker exec bpr-api-dev-v2 npx prisma migrate deploy --preview-feature
-              
-              echo "🧹 Cleaning up unused Docker resources..."
-              docker system prune -f
+              # Perintah migrate ini penting dijalankan setelah container baru naik
+              docker exec bpr-api-dev-v2 npx prisma migrate deploy
+
+              echo "🧹 Post-cleaning: Membersihkan image lama..."
+              # Hapus image lama yang sekarang jadi 'dangling' (tidak bernama) karena tertimpa yang baru
+              docker image prune -f
               
               echo "✅ Deploy complete!"
             EOSSH
