@@ -1,1 +1,9 @@
 git
+node_modules
+dist
+.env
+.env.*
+
+# Tambahkan ini untuk mencegah artifact lokal masuk ke docker
+generated/
+prisma/generated/

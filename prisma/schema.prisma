@@ -5,8 +5,10 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Tambahkan baris di bawah ini:
   binaryTargets = ["native", "debian-openssl-3.0.x"]
+  // Sesuaikan output jika kamu menggunakan custom path, misal:
   // output   = "../generated/prisma"
 }
 
