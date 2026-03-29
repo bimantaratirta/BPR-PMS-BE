@@ -38,6 +38,7 @@ model User {
   KEF           KEF[]
   KAR           KAR[]
   role          String   @default("PIC")
+  fcm_token     String?
 
   region       Region?    @relation("UserRegions", fields: [region_id], references: [id])
   branch       Branch?    @relation("UserBranches", fields: [branch_id], references: [id])
@@ -47,6 +48,7 @@ model User {
   report_lo    Report[]   @relation("UserReportLO")
   report_slo   Report[]   @relation("UserReportSLO")
   report_am    Report[]   @relation("UserReportAM")
+  current_location CurrentLocation[] @relation("CurrentLocationUser")
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
@@ -977,6 +979,20 @@ model ReviewEvaluationUpdateLog {
 
 
   @@map("review_evaluation_update_logs")
+}
+
+model CurrentLocation {
+  id         String    @id @default(uuid())
+  user_id    String
+  latitude   Float?
+  longitude  Float?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  user User @relation("CurrentLocationUser", fields: [user_id], references: [id])
+
+  @@map("current_locations")
 }
 
 enum Status {

@@ -28,6 +28,7 @@ import ReviewEvaluatonV2 from "./core/V2/review-evaluation/review-evaluation-rou
 import UserV2 from "./core/V2/user/user-routes.js";
 import DashboardV2 from "./core/V2/dashboard/dashboard-routes.js";
 import TestV2 from "./core/V2/test/test-routes.js";
+import CurrentLocationRoutes from "./core/V2/current-location/current-location-routes.js";
 
 const router = express.Router();
 
@@ -134,6 +135,10 @@ const appsRoutesV2 = [
   {
     path: "/test",
     route: TestV2,
+  },
+  {
+    path: "/current-location",
+    route: CurrentLocationRoutes,
   },
 ];
 
