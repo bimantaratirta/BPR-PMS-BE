@@ -2,7 +2,7 @@ import joi from "joi";
 import BaseError from "../../../base_classes/base-error.js";
 import { PrismaService } from "../../../common/service/prisma.service.js";
 import { buildQueryOptions } from "../../../utils/buildQueryOptions.js";
-import admin from "../../../utils/firebase.js"; // file firebase kamu
+import { firebase } from "../../../utils/firebase.js";
 
 // optional kalau kamu punya query config
 // import currentLocationQueryConfig from './current-location-query-config.js';
@@ -23,7 +23,7 @@ class CurrentLocationService {
       return { message: "No devices available" };
     }
 
-    await admin.messaging().sendEachForMulticast({
+    await firebase.messaging().sendEachForMulticast({
       tokens,
       data: {
         type: "REQUEST_LOCATION",
