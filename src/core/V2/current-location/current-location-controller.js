@@ -1,4 +1,8 @@
-import { createdResponse, successResponse, updatedResponse } from "../../../utils/response.js";
+import {
+  createdResponse,
+  successResponse,
+  updatedResponse,
+} from "../../../utils/response.js";
 import currentLocationService from "./current-location-service.js";
 
 class CurrentLocationController {
@@ -25,7 +29,7 @@ class CurrentLocationController {
     );
   }
 
-  async latest() {
+  async latest(req, res) {
     const result = await currentLocationService.latest();
     return successResponse(res, result.data);
   }
