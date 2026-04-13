@@ -30,7 +30,8 @@ class CurrentLocationController {
   }
 
   async latest(req, res) {
-    const result = await currentLocationService.latest();
+    const query = req.query;
+    const result = await currentLocationService.latest({ query });
     return successResponse(res, result.data);
   }
 
