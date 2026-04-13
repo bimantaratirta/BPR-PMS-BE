@@ -3,6 +3,7 @@ import BaseError from "../../../base_classes/base-error.js";
 import { PrismaService } from "../../../common/service/prisma.service.js";
 import { buildQueryOptions } from "../../../utils/buildQueryOptions.js";
 import { firebase } from "../../../utils/firebase.js";
+import currentLocationQueryConfig from "./current-location-query-config.js";
 
 // optional kalau kamu punya query config
 // import currentLocationQueryConfig from './current-location-query-config.js';
@@ -137,14 +138,52 @@ class CurrentLocationService {
     };
   }
 
-  async latest() {
-    // ambil lokasi terakhir tiap user
-    const locations = await this.prisma.currentLocation.findMany({
-      orderBy: { created_at: "desc" },
-      distinct: ["user_id"],
-    });
+  // async latest() {
+  //   // ambil lokasi terakhir tiap user
+  //   const locations = await this.prisma.currentLocation.findMany({
+  //     orderBy: { created_at: "desc" },
+  //     distinct: ["user_id"],
+  //   });
 
-    return { data: locations };
+  //   return { data: locations };
+  // }
+  async latest({ query } = {}) {
+    const options = buildQueryOptions(currentLocationQueryConfig, query);
+
+    const finalOptions = {
+      ...options,
+
+      // penting: ambil latest per user
+      orderBy: [{ user_id: "asc" }, { created_at: "desc" }],
+
+      distinct: ["user_id"],
+    };
+
+    const [data, count] = await Promise.all([
+      this.prisma.currentLocation.findMany(finalOptions),
+
+      // count harus mengikuti filter, tapi tanpa distinct
+      this.prisma.currentLocation.count({
+        where: finalOptions.where,
+      }),
+    ]);
+
+    const page = query?.pagination?.page ?? 1;
+    const limit = query?.pagination?.limit ?? 10;
+    const hasPagination = !!(query?.pagination && !query?.get_all);
+    const totalPages = hasPagination ? Math.ceil(count / limit) : 1;
+
+    return {
+      data,
+      meta: hasPagination
+        ? {
+            totalItems: count,
+            totalPages,
+            currentPage: Number(page),
+            itemsPerPage: Number(limit),
+          }
+        : null,
+    };
   }
 
   async detail(id) {
