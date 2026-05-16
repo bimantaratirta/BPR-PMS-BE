@@ -6,10 +6,8 @@
 
 generator client {
   provider      = "prisma-client-js"
-  // Tambahkan baris di bawah ini:
   binaryTargets = ["native", "debian-openssl-3.0.x"]
-  // Sesuaikan output jika kamu menggunakan custom path, misal:
-  // output   = "../generated/prisma"
+  output        = "../generated/prisma"
 }
 
 datasource db {

@@ -3,6 +3,7 @@ const Role = Object.freeze({
   LO: 'LO',
   SLO: 'SLO',
   AM: 'AM',
+  DIREKSI: 'Direksi',
 });
 
 export default Role;
